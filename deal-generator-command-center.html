@@ -240,6 +240,32 @@
 
   .loading{ min-height:100vh; display:flex; align-items:center; justify-content:center; color:var(--mute); font-size:14px; }
 </style>
+
+<script>
+  // Register Service Worker for offline support and auto-updates
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        // Check for updates whenever the page is focused
+        window.addEventListener('focus', () => {
+          reg.update();
+        });
+        
+        reg.onupdatefound = () => {
+          const installingWorker = reg.installing;
+          installingWorker.onstatechange = () => {
+            if (installingWorker.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                // New update available, reload to apply
+                window.location.reload();
+              }
+            }
+          };
+        };
+      });
+    });
+  }
+</script>
 </head>
 <body>
 
