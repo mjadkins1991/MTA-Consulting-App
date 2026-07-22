@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Deal Generator</title>
+<link rel="manifest" href="./manifest.json">
 
 <!-- Add-to-Home-Screen support (iOS + Android) -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -241,31 +242,34 @@
   .loading{ min-height:100vh; display:flex; align-items:center; justify-content:center; color:var(--mute); font-size:14px; }
 </style>
 
+
 <script>
-  // Register Service Worker for offline support and auto-updates
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').then(reg => {
-        // Check for updates whenever the page is focused
-        window.addEventListener('focus', () => {
-          reg.update();
-        });
-        
-        reg.onupdatefound = () => {
-          const installingWorker = reg.installing;
-          installingWorker.onstatechange = () => {
-            if (installingWorker.state === 'installed') {
-              if (navigator.serviceWorker.controller) {
-                // New update available, reload to apply
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => {
+          console.log('Service Worker registered');
+          
+          // Check for updates on focus
+          window.addEventListener('focus', () => {
+            reg.update();
+          });
+
+          reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New content is available; please refresh.');
                 window.location.reload();
               }
-            }
+            };
           };
-        };
-      });
+        })
+        .catch(err => console.log('Service Worker registration failed:', err));
     });
   }
 </script>
+
 </head>
 <body>
 

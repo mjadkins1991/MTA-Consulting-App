@@ -1,6 +1,8 @@
-const CACHE_NAME = 'mta-consulting-v1';
+const CACHE_NAME = 'mta-consulting-v2';
 const ASSETS = [
+  './',
   './deal-generator-command-center.html',
+  './manifest.json',
   './sw.js'
 ];
 
@@ -8,10 +10,11 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('Caching assets');
       return cache.addAll(ASSETS);
     })
   );
-  self.skipWaiting(); // Force wait until current SW is replaced
+  self.skipWaiting();
 });
 
 // Activate: Clean up old caches
@@ -23,27 +26,34 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim(); // Take control of all pages immediately
+  self.clients.claim();
 });
 
-// Fetch: Network-first strategy for the HTML file
+// Fetch: Network-first with fallback to cache
 self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          // Update cache with the fresh version
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request);
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // If successful, clone it and update the cache
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
       })
-    );
-  }
+      .catch(() => {
+        // If network fails, try the cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // If both fail, and it's a navigation request, return the cached HTML
+          if (event.request.mode === 'navigate') {
+            return caches.match('./deal-generator-command-center.html');
+          }
+        });
+      })
+  );
 });

@@ -1,0 +1,17 @@
+{
+  "name": "Deal Generator Command Center",
+  "short_name": "Deal Gen",
+  "description": "More Than Average Consulting Deal Generator",
+  "start_url": "./deal-generator-command-center.html",
+  "display": "standalone",
+  "background_color": "#10162B",
+  "theme_color": "#10162B",
+  "icons": [
+    {
+      "src": "./logo_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
